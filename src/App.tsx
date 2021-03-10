@@ -1,22 +1,87 @@
-import React from 'react';
-import styled from 'styled-components'
+import React, { useState } from "react";
+import styled from "styled-components";
 
 export default function App() {
+  // Global states
+  const [bearer, setBearer] = useState("");
+  const [fetching, setFetching] = useState(false);
+  const [error, setError] = useState("");
+
+  // Form value states
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function authenticateUser() {
+    const res = await fetch(
+      "https://datscha-fe-code-test-api.azurewebsites.net/login",
+      {
+        method: "post",
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      }
+    );
+
+    console.log("RES", res);
+
+    const json = await res.json();
+    console.log("JSON", json);
+
+    if (!res.ok) {
+      if(json.message) {
+        setError(json.message);
+      } else {
+        setError(`An error occurred: ${res.statusText}`);
+      }
+    } else {
+      setBearer(json.token);
+    }
+  }
+
   return (
     <div>
-      <LoginBox>
-        <MainTitle>Login</MainTitle>
-        <ButtonWrapper>
-          <LoginButton>Login</LoginButton>
-        </ButtonWrapper>
+      {bearer ? (
+        // Authenticated
+        <LoginBox>
+          <MainTitle>Authenticated</MainTitle>
+        </LoginBox>
+      ) : (
+        // Not authenticated
+        <LoginBox>
+          <MainTitle>Login</MainTitle>
 
-        <ButtonWrapper>
-          <SignOutButton disabled >Logout</SignOutButton>
-        </ButtonWrapper>
-      </LoginBox>
+          <FormWrapper>
+            <RowWrapper>
+              <StyledInput placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+            </RowWrapper>
+
+            <RowWrapper>
+              <StyledInput placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </RowWrapper>
+          </FormWrapper>
+
+          <RowWrapper>
+            <LoginButton onClick={() => authenticateUser()}>Login</LoginButton>
+          </RowWrapper>
+        </LoginBox>
+      )}
     </div>
   );
 }
+
+const StyledInput = styled.input`
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 5px;
+  height: 30px;
+  padding: 5px 10px;
+`
 
 const LoginButton = styled.button`
   background: linear-gradient(312deg,#3f92d6 30%, rgb(63, 146, 214)  90%);
@@ -29,14 +94,14 @@ const LoginButton = styled.button`
   color: white;
 `
 
-const SignOutButton = styled(LoginButton)`
-  background: linear-gradient(312deg,#d63f6c 20%, #a14a65  90%);
-`
-
-const ButtonWrapper = styled.div`
+const RowWrapper = styled.div`
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
+`
+
+const FormWrapper = styled.div`
+  margin-bottom: 20px;
 `
 
 const MainTitle = styled.h3`
