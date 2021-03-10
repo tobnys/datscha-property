@@ -1,15 +1,51 @@
 import React from 'react';
-
-import styled, { createGlobalStyle } from 'styled-components'
+import styled from 'styled-components'
 
 export default function App() {
   return (
     <div>
-      <GlobalStyle />
-      <LoginBox />
+      <LoginBox>
+        <MainTitle>Login</MainTitle>
+        <ButtonWrapper>
+          <LoginButton>Login</LoginButton>
+        </ButtonWrapper>
+
+        <ButtonWrapper>
+          <SignOutButton disabled >Logout</SignOutButton>
+        </ButtonWrapper>
+      </LoginBox>
     </div>
   );
 }
+
+const LoginButton = styled.button`
+  background: linear-gradient(312deg,#3f92d6 30%, rgb(63, 146, 214)  90%);
+  box-shadow: 0 3px 5px 2px rgba(54, 150, 167, 0.1);
+  border: 0;
+  border-radius: 5px;
+  height: 40px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+`
+
+const SignOutButton = styled(LoginButton)`
+  background: linear-gradient(312deg,#d63f6c 20%, #a14a65  90%);
+`
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+`
+
+const MainTitle = styled.h3`
+  font-size: 24px;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  padding-bottom: 45px;
+`
 
 const LoginBox = styled.div`
   width: 300px;
@@ -19,16 +55,5 @@ const LoginBox = styled.div`
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-`
-
-const GlobalStyle = createGlobalStyle`
-  html {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background: rgb(6,10,11);
-    background: linear-gradient(360deg, rgba(6,10,11,1) 25%, rgba(36,43,52,1) 100%);
-    font-family: 'Manrope', sans-serif;
-  }
+  border-radius: 5px;
 `
