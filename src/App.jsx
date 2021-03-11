@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+
+// Component imports
+import Properties from "./Properties";
 
 export default function App() {
   // Global states
   const [bearer, setBearer] = useState("");
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
+  const [properties, setProperties] = useState([]);
 
   // Form value states
   const [username, setUsername] = useState("");
@@ -15,7 +19,7 @@ export default function App() {
     const res = await fetch(
       "https://datscha-fe-code-test-api.azurewebsites.net/login",
       {
-        method: "post",
+        method: "POST",
         body: JSON.stringify({
           username: username,
           password: password,
@@ -27,10 +31,7 @@ export default function App() {
       }
     );
 
-    console.log("RES", res);
-
     const json = await res.json();
-    console.log("JSON", json);
 
     if (!res.ok) {
       if(json.message) {
@@ -43,13 +44,44 @@ export default function App() {
     }
   }
 
+  async function fetchProperties() {
+    const res = await fetch(
+      "https://datscha-fe-code-test-api.azurewebsites.net/properties",
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${bearer}`,
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      }
+    );
+
+    const json = await res.json();
+
+    if (!res.ok) {
+      if(json.message) {
+        setError(json.message);
+      } else {
+        setError(`An error occurred: ${res.statusText}`);
+      }
+    } else {
+      setProperties(json);
+    }
+  }
+
+  useEffect(() => {
+    // If authenticated, fetch properties
+    if(bearer) {
+      fetchProperties();
+    }
+  }, [bearer])
+
   return (
     <div>
       {bearer ? (
         // Authenticated
-        <LoginBox>
-          <MainTitle>Authenticated</MainTitle>
-        </LoginBox>
+        <Properties properties={properties} />
       ) : (
         // Not authenticated
         <LoginBox>
@@ -64,6 +96,8 @@ export default function App() {
               <StyledInput placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </RowWrapper>
           </FormWrapper>
+
+          {error && <ErrorTitle>{error}</ErrorTitle>}
 
           <RowWrapper>
             <LoginButton onClick={() => authenticateUser()}>Login</LoginButton>
@@ -110,6 +144,13 @@ const MainTitle = styled.h3`
   text-align: center;
   font-weight: bold;
   padding-bottom: 45px;
+`
+
+const ErrorTitle = styled.h4`
+  font-size: 14px;
+  color: #aa3535;
+  text-align: left;
+  font-weight: bold;
 `
 
 const LoginBox = styled.div`
