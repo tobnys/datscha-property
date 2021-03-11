@@ -5,9 +5,14 @@ import PropertyListItem from "./PropertyListItem";
 
 
 export default function Properties({ properties }) {
-  const [areaInterval, setAreaInterval] = useState([0, -1]);
+  const [areaInterval, setAreaInterval] = useState([0, 500]);
+
+  useEffect(() => {
+
+  }, [areaInterval]);
   
   console.log("PROPERTIES", properties);
+  console.log("AREAINTER", areaInterval);
   return (
     <PropertiesContainer>
       <MainTitle>Properties</MainTitle>
@@ -15,28 +20,24 @@ export default function Properties({ properties }) {
         <div>
           <DropdownWrapper>
             <StyledLabel>Area interval</StyledLabel>
-            <StyledSelect>
+            <StyledSelect onChange={(e) => setAreaInterval(e.target.value.split(","))}>
               <option 
-                value="0-500" 
-                onClick={() => setAreaInterval([0, 500])}
+                value={[0, 500]} 
               >
                 0-500
               </option>
               <option 
-                value="501-1000" 
-                onClick={() => setAreaInterval([501, 1000])}
+                value={[501, 1000]}
               >
                 501-1000
               </option>
               <option 
-                value="1001-2000" 
-                onClick={() => setAreaInterval([1001, 2000])}
+                value={[1001, 2000]}
               >
                 1001-2000
               </option>
-              <option 
-                value="2001-5000" 
-                onClick={() => setAreaInterval([2001, 5000])}
+              <option
+                value={[2001, 5000]}
               >
                 2001-5000
               </option>
@@ -44,12 +45,14 @@ export default function Properties({ properties }) {
           </DropdownWrapper>
 
           <PropertyList>
-            <PropertyListItem name="test" />
-            <PropertyListItem name="test" />
             {properties.map((p, i) => {
-              p.premisesTypes.forEach(type => {
-
-              }) 
+              return (p.premisesTypes.map(type => {
+                // Make sure the premise type is within the area interval specified
+                // If it is, then return the entire property
+                if(type.area >= areaInterval[0] && type.area <= areaInterval[1]) {
+                  return <PropertyListItem key={i} name={p.name} />
+                } else return null;
+              }));
             })}
           </PropertyList>
         </div>
@@ -68,10 +71,12 @@ const PropertyList = styled.div`
 
 const StyledSelect = styled.select`
   padding: 10px;
+  font-size: 16px;
 `
 
 const StyledLabel = styled.label`
   padding-bottom: 5px;
+  font-size: 18px;
 `
 
 const DropdownWrapper = styled.div`
