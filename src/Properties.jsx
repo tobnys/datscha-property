@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import PropertyListItem from "./PropertyListItem";
 
 export default function Properties({ properties }) {
   const [areaInterval, setAreaInterval] = useState([0, 500]);
   const [premiseType, setPremiseType] = useState("");
   const [premiseTypesInArea, setPremiseTypesInArea] = useState([]);
-  const [property, setProperty] = useState({});
+  const [availableProperties, setAvailableProperties] = useState([]);
+  const [property, setProperty] = useState(null);
+  const [propertyId, setPropertyId] = useState(null);
 
   useEffect(() => {
     let premisesTypes = [];
 
-    // Calculate premises types
+    // Determine premises types
     properties.map((p, i) => {
       return (p.premisesTypes.map(t => {
 
@@ -29,20 +30,47 @@ export default function Properties({ properties }) {
     // Set default premise type
     if(premisesTypes.length > 1) {
       setPremiseTypesInArea(premisesTypes);
-      setPremiseType(premisesTypes[0]);
+    }
+    
+    // Form a list for available properties
+    let available = [];
+    properties.forEach(p => {
+      return (p.premisesTypes.forEach(t => {
+        if(t.area >= areaInterval[0] && t.area <= areaInterval[1] && premiseType === t.type) {
+          available.push(p);
+        } else return null;
+      }))
+    });
+    setAvailableProperties(available);
+
+    if(!property && available.length > 0) {
+      setProperty(available[0]);
     }
 
-    // Set default property
-    properties.map((p, i) => {
-      return (p.premisesTypes.map(t => {
-        if(t.area >= areaInterval[0] && t.area <= areaInterval[1] && premiseType === t.type) {
-          setProperty(p);
-        } else return null;
-      }));
-    })
-  }, [properties, areaInterval, premiseType]);
-  
-  console.log("PROPERTYE", property);
+    // If its a new list, set the property to be the first in the list
+    if(!available.some(a => a.name === (property && property.name))) {
+      setProperty(available[0]);
+    }
+    
+  }, [properties, areaInterval, premiseType, property]);
+
+  useEffect(() => {
+    // Add property by ID, only if propertyId has changed.
+    if(propertyId) {
+      setProperty(properties.find(p => p.id === propertyId));
+    }
+  }, [properties, propertyId])
+
+  function calculateTotalYield() {
+    let totalRentYield = 0;
+    if(property && property.premisesTypes) {
+      property.premisesTypes.forEach((premiseType) => {
+        totalRentYield = totalRentYield+Math.round(premiseType.rent)*1.05;
+      })
+    } 
+    return <RentYieldTitle>{Math.round(totalRentYield)}</RentYieldTitle>
+  }
+
   return (
     <PropertiesContainer>
       <MainTitle>Properties</MainTitle>
@@ -79,6 +107,7 @@ export default function Properties({ properties }) {
           <DropdownWrapper>
             <StyledLabel>Premises types</StyledLabel>
             <StyledSelect value={premiseType} onChange={(e) => setPremiseType(e.target.value)}>
+              {!premiseType && <option value={""}></option>}
               {premiseTypesInArea.map((premiseType, i) => {
                 return (
                   <option 
@@ -96,35 +125,77 @@ export default function Properties({ properties }) {
         <div>
           <DropdownWrapper>
             <StyledLabel>Available properties</StyledLabel>
-            <StyledSelect value={property} onChange={(e) => setProperty(e.target.value)}>
-              {properties.map((p, i) => {
-                return (p.premisesTypes.map(t => {
-                  if(t.area >= areaInterval[0] && t.area <= areaInterval[1] && premiseType === t.type) {
-                    return (
-                      <option 
-                        key={i}
-                        value={p} 
-                      >
-                        {p.name}
-                      </option>
-                    );
-                  } else return null;
-                }));
+            <StyledSelect value={property && property.id} onChange={(e) => setPropertyId(e.target.value)}>
+              {!property && <option value={""}></option>}
+              {availableProperties.map((p, i) => {
+                return (
+                  <option 
+                    key={i}
+                    value={p.id} 
+                  >
+                    {p.name}
+                  </option>
+                );
               })}
             </StyledSelect>
           </DropdownWrapper>
         </div>
       </Grid>
       <PropertyContainer>
-        <h1>{property.name}</h1>
+        <MainTitle>Rent specification for {property && property.name}</MainTitle>
+        <StyledTable>
+          <tbody>
+            <tr>
+              <th scope="col">Premise Type</th>
+              <th scope="col">Start rent</th>
+              <th scope="col">Year 1</th>
+              <th scope="col">Year 2</th>
+              <th scope="col">Year 3</th>
+              <th scope="col">Year 4</th>
+              <th scope="col">Year 5</th>
+            </tr>
+
+            {property && property.premisesTypes && property.premisesTypes.map((premiseType, i) => {
+              return (
+                <tr key={i}>
+                  <th scope="row">{premiseType.type}</th>
+                  <td>{Math.round(premiseType.rent)}</td>
+                  <td>{Math.round(premiseType.rent*1.05)}</td>
+                  <td>{Math.round((premiseType.rent*1.05)*1.05)}</td>
+                  <td>{Math.round(((premiseType.rent*1.05)*1.05)*1.03)}</td>
+                  <td>{Math.round((((premiseType.rent*1.05)*1.05)*1.03)*1.02)}</td>
+                  <td>{Math.round(((((premiseType.rent*1.05)*1.05)*1.03)*1.02)*1.02)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </StyledTable>
+      </PropertyContainer>
+      <PropertyContainer>
+        <MainTitle>Total rent yield for next year</MainTitle>
+        {calculateTotalYield()}
       </PropertyContainer>
     </PropertiesContainer>
   );
 }
 
+const RentYieldTitle = styled.h4`
+  font-size: 24px;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  margin: 0;
+  padding-bottom: 40px;
+`
+
+const StyledTable = styled.table`
+  text-align: left;
+`
+
 const PropertyContainer = styled.div`
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  padding-top: 40px;
 `
 
 const StyledSelect = styled.select`

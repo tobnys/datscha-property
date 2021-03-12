@@ -7,7 +7,6 @@ import Properties from "./Properties";
 export default function App() {
   // Global states
   const [bearer, setBearer] = useState("");
-  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
   const [properties, setProperties] = useState([]);
 
