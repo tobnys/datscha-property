@@ -2,17 +2,47 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import PropertyListItem from "./PropertyListItem";
 
-
-
 export default function Properties({ properties }) {
   const [areaInterval, setAreaInterval] = useState([0, 500]);
+  const [premiseType, setPremiseType] = useState("");
+  const [premiseTypesInArea, setPremiseTypesInArea] = useState([]);
+  const [property, setProperty] = useState({});
 
   useEffect(() => {
+    let premisesTypes = [];
 
-  }, [areaInterval]);
+    // Calculate premises types
+    properties.map((p, i) => {
+      return (p.premisesTypes.map(t => {
+
+        // Make sure the premise type is within the area interval specified
+        if(t.area >= areaInterval[0] && t.area <= areaInterval[1]) {
+
+          // Add available premise type to array if it doesn't already exist
+          if(!premisesTypes.includes(t.type)) {
+            premisesTypes.push(t.type);
+          }
+        } else return null;
+      }));
+    })
+
+    // Set default premise type
+    if(premisesTypes.length > 1) {
+      setPremiseTypesInArea(premisesTypes);
+      setPremiseType(premisesTypes[0]);
+    }
+
+    // Set default property
+    properties.map((p, i) => {
+      return (p.premisesTypes.map(t => {
+        if(t.area >= areaInterval[0] && t.area <= areaInterval[1] && premiseType === t.type) {
+          setProperty(p);
+        } else return null;
+      }));
+    })
+  }, [properties, areaInterval, premiseType]);
   
-  console.log("PROPERTIES", properties);
-  console.log("AREAINTER", areaInterval);
+  console.log("PROPERTYE", property);
   return (
     <PropertiesContainer>
       <MainTitle>Properties</MainTitle>
@@ -20,7 +50,7 @@ export default function Properties({ properties }) {
         <div>
           <DropdownWrapper>
             <StyledLabel>Area interval</StyledLabel>
-            <StyledSelect onChange={(e) => setAreaInterval(e.target.value.split(","))}>
+            <StyledSelect value={areaInterval} onChange={(e) => setAreaInterval(e.target.value.split(","))}>
               <option 
                 value={[0, 500]} 
               >
@@ -43,30 +73,58 @@ export default function Properties({ properties }) {
               </option>
             </StyledSelect>
           </DropdownWrapper>
-
-          <PropertyList>
-            {properties.map((p, i) => {
-              return (p.premisesTypes.map(type => {
-                // Make sure the premise type is within the area interval specified
-                // If it is, then return the entire property
-                if(type.area >= areaInterval[0] && type.area <= areaInterval[1]) {
-                  return <PropertyListItem key={i} name={p.name} />
-                } else return null;
-              }));
-            })}
-          </PropertyList>
         </div>
 
-        <div><h1>Hello</h1></div>
+        <div>
+          <DropdownWrapper>
+            <StyledLabel>Premises types</StyledLabel>
+            <StyledSelect value={premiseType} onChange={(e) => setPremiseType(e.target.value)}>
+              {premiseTypesInArea.map((premiseType, i) => {
+                return (
+                  <option 
+                    key={i}
+                    value={premiseType} 
+                  >
+                    {premiseType}
+                  </option>
+                );
+              })}
+            </StyledSelect>
+          </DropdownWrapper>
+        </div>
 
-        <div><h1>Hello</h1></div>
+        <div>
+          <DropdownWrapper>
+            <StyledLabel>Available properties</StyledLabel>
+            <StyledSelect value={property} onChange={(e) => setProperty(e.target.value)}>
+              {properties.map((p, i) => {
+                return (p.premisesTypes.map(t => {
+                  if(t.area >= areaInterval[0] && t.area <= areaInterval[1] && premiseType === t.type) {
+                    return (
+                      <option 
+                        key={i}
+                        value={p} 
+                      >
+                        {p.name}
+                      </option>
+                    );
+                  } else return null;
+                }));
+              })}
+            </StyledSelect>
+          </DropdownWrapper>
+        </div>
       </Grid>
+      <PropertyContainer>
+        <h1>{property.name}</h1>
+      </PropertyContainer>
     </PropertiesContainer>
   );
 }
 
-const PropertyList = styled.div`
-
+const PropertyContainer = styled.div`
+  display: flex;
+  justify-content: center;
 `
 
 const StyledSelect = styled.select`
